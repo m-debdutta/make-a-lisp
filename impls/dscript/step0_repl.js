@@ -7,10 +7,10 @@ const READ = (str) => str;
 const EVAL = (str) => str;
 const PRINT = (str) => console.log(str);
 
-const readStdin = () =>
+const rep = () =>
   rl.question('user> ', (expStr) => {
     PRINT(EVAL(READ(expStr)));
-    readStdin();
+    rep();
   });
 
-readStdin();
+rep();
