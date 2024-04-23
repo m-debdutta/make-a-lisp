@@ -51,4 +51,39 @@ class MalVector extends MalType {
   }
 }
 
-module.exports = { MalNumber, MalList, MalSymbol, MalError, MalVector };
+class MalMap extends MalType {
+  constructor(val) {
+    super(val);
+    this.value = [...val];
+  }
+
+  pr_str() {
+    return '{' + this.value.map((v) => v.pr_str()).join(' ') + '}';
+  }
+}
+
+class MalString extends MalType {
+  constructor(val) {
+    super(val);
+    this.value = val;
+  }
+}
+
+class MalKeyword extends MalType {
+  constructor(val) {
+    super(val);
+    this.value = val;
+  }
+}
+
+module.exports = {
+  MalNumber,
+  MalList,
+  MalSymbol,
+  MalError,
+  MalVector,
+  MalType,
+  MalMap,
+  MalString,
+  MalKeyword,
+};

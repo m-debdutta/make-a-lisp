@@ -1,4 +1,12 @@
-const { MalNumber, MalList, MalSymbol, MalVector } = require('./type');
+const {
+  MalNumber,
+  MalList,
+  MalSymbol,
+  MalVector,
+  MalMap,
+  MalString,
+  MalKeyword,
+} = require('./type');
 
 const tokenize = (str) => {
   const regex = /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g;
@@ -50,12 +58,33 @@ const read_vector = (reader) => {
 
 const read_atom = (reader) => {
   const token = reader.peek();
+  const isString = /"(?:\\.|[^\\"])*"$/.test(token);
+  const isNumber = /^-*\d+$/.test(token);
+  const isKeyword = /^:/.test(token);
+
   switch (true) {
-    case typeof token === 'number':
+    case isNumber:
       return new MalNumber(parseInt(token));
+    case isString:
+      return new MalString(token);
+    case isKeyword:
+      return new MalKeyword(token);
     default:
       return new MalSymbol(token);
   }
+};
+
+const read_map = (reader) => {
+  const map = [];
+  reader.next();
+
+  while (reader.peek() !== '}') {
+    if (reader.peek() === undefined) throw new Error('unbalanced');
+    map.push(read_form(reader));
+    reader.next();
+  }
+
+  return new MalMap(map);
 };
 
 const read_form = (reader) => {
@@ -65,6 +94,8 @@ const read_form = (reader) => {
       return read_vector(reader);
     case '(':
       return read_list(reader);
+    case '{':
+      return read_map(reader);
     default:
       return read_atom(reader);
   }
