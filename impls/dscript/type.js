@@ -76,6 +76,16 @@ class MalKeyword extends MalType {
   }
 }
 
+class MalNil extends MalType {
+  constructor() {
+    super(null);
+  }
+
+  pr_str() {
+    return 'nil';
+  }
+}
+
 module.exports = {
   MalNumber,
   MalList,
@@ -86,4 +96,5 @@ module.exports = {
   MalMap,
   MalString,
   MalKeyword,
+  MalNil,
 };
