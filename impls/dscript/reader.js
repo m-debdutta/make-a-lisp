@@ -65,10 +65,13 @@ const read_atom = (reader) => {
   switch (true) {
     case isNumber:
       return new MalNumber(parseInt(token));
+
     case isString:
       return new MalString(token);
+
     case isKeyword:
       return new MalKeyword(token);
+
     default:
       return new MalSymbol(token);
   }
@@ -92,10 +95,13 @@ const read_form = (reader) => {
   switch (firstToken) {
     case '[':
       return read_vector(reader);
+
     case '(':
       return read_list(reader);
+
     case '{':
       return read_map(reader);
+      
     default:
       return read_atom(reader);
   }

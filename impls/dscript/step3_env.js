@@ -12,6 +12,7 @@ const {
   MalNil,
 } = require('./type');
 const { Env } = require('./env');
+const { chunk } = require('lodash');
 
 const rl = readline.createInterface({ input, output });
 
@@ -27,53 +28,69 @@ const eval_ast = (ast, repl_env) => {
     case ast instanceof MalSymbol:
       if (repl_env.get(ast.value) === undefined) throw new Error('invalid function');
       return repl_env.get(ast.value);
+
     case ast instanceof MalList:
       return new MalList(ast.value.map((a) => EVAL(a, repl_env)));
+
     case ast instanceof MalVector:
       return new MalVector(ast.value.map((a) => EVAL(a, repl_env)));
+
     case ast instanceof MalMap:
       return new MalMap(ast.value.map((a) => EVAL(a, repl_env)));
+
     default:
       return ast;
   }
 };
 
-const EVAL = (ast, repl_env) => {
-  if (!(ast instanceof MalList)) return eval_ast(ast, repl_env);
+const evalLet = (ast, repl_env) => {
+  const newEnv = new Env(repl_env);
+  const [_, args, list] = ast.value;
+  const bindings = chunk(args.value, 2);
 
-  if (ast.value.length === 0) return ast;
+  bindings.forEach(([symbol, value]) => {
+    newEnv.set(symbol.value, EVAL(value, newEnv));
+  });
 
-  if (ast.value[0].value === 'def!') {
-    const [_, symbol, valAst] = ast.value;
-    const val = EVAL(valAst, repl_env);
-    repl_env.set(symbol.value, val);
+  if (list) return EVAL(list, newEnv);
 
-    return val;
-  }
+  return new MalNil();
+};
 
-  if (ast.value[0].value === 'let*') {
-    const newEnv = new Env(repl_env);
-    const [_, args, list] = ast.value;
-    const bindings = args.value;
+const evalDef = (ast, repl_env) => {
+  const [_, symbol, valAst] = ast.value;
+  const val = EVAL(valAst, repl_env);
+  repl_env.set(symbol.value, val);
 
-    for (i = 0; i < bindings.length; i = i + 2) {
-      const symbol = bindings[i].value;
-      const value = EVAL(bindings[i + 1], newEnv);
+  return val;
+};
 
-      newEnv.set(symbol, value);
-    }
-
-    if (list !== undefined) return EVAL(list, newEnv);
-
-    return new MalNil();
-  }
-
+const evalList = (ast, repl_env) => {
   const [fun, ...args] = eval_ast(ast, repl_env).value;
 
   return fun.apply(
     null,
     args.map((a) => a.value)
   );
+};
+
+const EVAL = (ast, repl_env) => {
+  switch (true) {
+    case !(ast instanceof MalList):
+      return eval_ast(ast, repl_env);
+
+    case ast.value.length === 0:
+      return ast;
+
+    case ast.value[0].value === 'def!':
+      return evalDef(ast, repl_env);
+
+    case ast.value[0].value === 'let*':
+      return evalLet(ast, repl_env);
+
+    default:
+      return evalList(ast, repl_env);
+  }
 };
 
 const READ = (str) => read_str(str);
