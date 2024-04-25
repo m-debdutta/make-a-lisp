@@ -1,7 +1,21 @@
+const { zip } = require('lodash');
+const { MalType } = require('./type');
+
 class Env {
   constructor(outer) {
     this.outer = outer;
     this.data = {};
+  }
+
+  static bind(outer, binds, exprs) {
+    const env = new this(outer);
+    const bindings = zip(binds, exprs);
+
+    bindings.forEach(([symbol, expression]) => {
+      env.set(symbol.value, expression);
+    });
+
+    return env;
   }
 
   set(symbol, malValue) {

@@ -6,6 +6,8 @@ const {
   MalMap,
   MalString,
   MalKeyword,
+  MalBool,
+  MalNil,
 } = require('./type');
 
 const tokenize = (str) => {
@@ -59,12 +61,21 @@ const read_vector = (reader) => {
 const read_atom = (reader) => {
   const token = reader.peek();
   const isString = /"(?:\\.|[^\\"])*"$/.test(token);
-  const isNumber = /^-*\d+$/.test(token);
+  const isNumber = /^-*[\d.]+$/.test(token);
   const isKeyword = /^:/.test(token);
 
   switch (true) {
+    case token === 'true':
+      return new MalBool(true);
+
+    case token === 'false':
+      return new MalBool(false);
+
     case isNumber:
-      return new MalNumber(parseInt(token));
+      return new MalNumber(parseFloat(token));
+
+    case token === 'nil':
+      return new MalNil();
 
     case isString:
       return new MalString(token);
@@ -101,7 +112,7 @@ const read_form = (reader) => {
 
     case '{':
       return read_map(reader);
-      
+
     default:
       return read_atom(reader);
   }
