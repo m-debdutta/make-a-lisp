@@ -51,7 +51,7 @@ const evalDo = (ast, repl_env) => {
   let result = new MalNil();
   const [_, ...exprs] = ast.value;
 
-  for (exp of exprs) {
+  for (const exp of exprs) {
     result = EVAL(exp, repl_env);
   }
 
